@@ -48,7 +48,7 @@ func GetAllUsers(ctx *fiber.Ctx) error {
 	return ctx.Status(200).JSON(users)
 }
 
-func findUserById(id int, userModel *models.User) error {
+func FindUserById(id uint, userModel *models.User) error {
 	database.Database.Db.Find(&userModel, "id = ?", id)
 	if userModel.ID == 0 {
 		return errors.New(fmt.Sprintf("No user with id %v exists", id))
@@ -64,7 +64,7 @@ func GetUserById(ctx *fiber.Ctx) error {
 	}
 
 	var userModel models.User
-	if err := findUserById(id, &userModel); err != nil {
+	if err := FindUserById(uint(id), &userModel); err != nil {
 		return ctx.Status(400).JSON(err.Error())
 	}
 
@@ -79,7 +79,7 @@ func UpdateUserById(ctx *fiber.Ctx) error {
 	}
 
 	var userModel models.User
-	if err := findUserById(id, &userModel); err != nil {
+	if err := FindUserById(uint(id), &userModel); err != nil {
 		return ctx.Status(400).JSON(err.Error())
 	}
 
@@ -108,7 +108,7 @@ func DeleteUserById(ctx *fiber.Ctx) error {
 	}
 
 	var userModel models.User
-	if err := findUserById(id, &userModel); err != nil {
+	if err := FindUserById(uint(id), &userModel); err != nil {
 		return ctx.Status(400).JSON(err.Error())
 	}
 
