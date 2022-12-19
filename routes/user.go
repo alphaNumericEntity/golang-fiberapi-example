@@ -70,3 +70,51 @@ func GetUserById(ctx *fiber.Ctx) error {
 
 	return ctx.Status(200).JSON(createUserSerializer(userModel))
 }
+
+func UpdateUserById(ctx *fiber.Ctx) error {
+	id, err := ctx.ParamsInt("id")
+
+	if err != nil {
+		return ctx.Status(400).JSON("ensure id is correct")
+	}
+
+	var userModel models.User
+	if err := findUserById(id, &userModel); err != nil {
+		return ctx.Status(400).JSON(err.Error())
+	}
+
+	type UserUpdate struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+	}
+
+	var userUpdate UserUpdate
+	if err := ctx.BodyParser(&userUpdate); err != nil {
+		return ctx.Status(400).JSON(err.Error())
+	}
+
+	userModel.FirstName = userUpdate.FirstName
+	userModel.LastName = userUpdate.LastName
+
+	database.Database.Db.Save(&userModel)
+	return ctx.Status(200).JSON(createUserSerializer(userModel))
+}
+
+func DeleteUserById(ctx *fiber.Ctx) error {
+	id, err := ctx.ParamsInt("id")
+
+	if err != nil {
+		return ctx.Status(400).JSON("ensure id is correct")
+	}
+
+	var userModel models.User
+	if err := findUserById(id, &userModel); err != nil {
+		return ctx.Status(400).JSON(err.Error())
+	}
+
+	if err := database.Database.Db.Delete(&userModel).Error; err != nil {
+		return ctx.Status(400).JSON(err.Error())
+	}
+
+	return ctx.Status(200).JSON("user deleted")
+}
