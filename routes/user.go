@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/alphanumericentity/fiber-api/database"
@@ -15,19 +17,19 @@ type User struct {
 	LastName  string `json:"last_name"`
 }
 
-func CreateUserSerializer(userModel models.User) User {
+func createUserSerializer(userModel models.User) User {
 	return User{ID: userModel.ID, FirstName: userModel.FirstName, LastName: userModel.LastName}
 }
 
 func CreateUser(ctx *fiber.Ctx) error {
-	var userModel models.User //should be user model? todo
+	var userModel models.User
 	if err := ctx.BodyParser(&userModel); err != nil {
 		log.Fatal("Could not parse request")
 		return ctx.Status(400).JSON(err.Error())
 	}
 
 	database.Database.Db.Create(&userModel)
-	return ctx.Status(200).JSON(CreateUserSerializer(userModel))
+	return ctx.Status(200).JSON(createUserSerializer(userModel))
 
 }
 
@@ -39,10 +41,32 @@ func GetAllUsers(ctx *fiber.Ctx) error {
 	var users = []User{}
 
 	for _, userModel := range userModels {
-		var user = CreateUserSerializer(userModel)
+		var user = createUserSerializer(userModel)
 		users = append(users, user)
 	}
 
 	return ctx.Status(200).JSON(users)
+}
 
+func findUserById(id int, userModel *models.User) error {
+	database.Database.Db.Find(&userModel, "id = ?", id)
+	if userModel.ID == 0 {
+		return errors.New(fmt.Sprintf("No user with id %v exists", id))
+	}
+	return nil
+}
+
+func GetUserById(ctx *fiber.Ctx) error {
+	id, err := ctx.ParamsInt("id")
+
+	if err != nil {
+		return ctx.Status(400).JSON("ensure id is correct")
+	}
+
+	var userModel models.User
+	if err := findUserById(id, &userModel); err != nil {
+		return ctx.Status(400).JSON(err.Error())
+	}
+
+	return ctx.Status(200).JSON(createUserSerializer(userModel))
 }
