@@ -30,3 +30,19 @@ func CreateUser(ctx *fiber.Ctx) error {
 	return ctx.Status(200).JSON(CreateUserSerializer(userModel))
 
 }
+
+func GetAllUsers(ctx *fiber.Ctx) error {
+	var userModels = []models.User{}
+
+	database.Database.Db.Find(&userModels)
+
+	var users = []User{}
+
+	for _, userModel := range userModels {
+		var user = CreateUserSerializer(userModel)
+		users = append(users, user)
+	}
+
+	return ctx.Status(200).JSON(users)
+
+}
